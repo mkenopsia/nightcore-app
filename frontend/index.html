@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎧 Nightcore Processor</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="file"]:hover { border-color: var(--primary); }
+        
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .slider-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover { background: var(--primary-hover); }
+        button:disabled { 
+            background: var(--border); 
+            cursor: not-allowed; 
+            opacity: 0.7;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.loading {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--text);
+            display: block;
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--error);
+            color: var(--error);
+            display: block;
+        }
+        
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+            display: block;
+        }
+        
+        .result {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+        
+        .result.show { display: block; }
+        
+        audio {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+            padding: 8px 16px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+        
+        button.loading .spinner { display: inline-block; }
+        button.loading .btn-text { margin-left: 8px; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .preset-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .preset-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 6px 12px;
+            background: var(--border);
+            border: none;
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .preset-btn:hover { background: var(--primary); }
+        .preset-btn.active { background: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 Nightcore Processor</h1>
+        
+        <form id="processForm">
+            <div class="form-group">
+                <label for="audioFile">🎵 Выберите аудиофайл</label>
+                <input type="file" id="audioFile" accept="audio/*,.mp3,.wav,.flac,.ogg" required>
+            </div>
+            
+            <div class="form-group">
+                <label>⚡ Темп (speed)</label>
+                <div class="slider-group">
+                    <input type="range" id="tempo" min="-50" max=100" value="0" step="1">
+                    <span class="slider-value" id="tempoValue">1.00x</span>
+                </div>
+                
+                <div class="preset-btns">
+                    <button type="button" class="preset-btn" data-tempo="-15">🐌 Slowed</button>
+                    <button type="button" class="preset-btn" data-tempo="0">↔️ Оригинал</button>
+                    <button type="button" class="preset-btn active" data-tempo="15">⚡ Nightcore</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🎼 Питч (высота тона)</label>
+                <div class="slider-group">
+                    <input type="range" id="pitch" min="-12" max="12" value="0" step="0.1">
+                    <span class="slider-value" id="pitchValue">0 st</span>
+                </div>
+                
+                <div class="preset-btns">
+                    <button type="button" class="preset-btn" data-pitch="-3">📉 Ниже</button>
+                    <button type="button" class="preset-btn active" data-pitch="0">↔️ Как есть</button>
+                    <button type="button" class="preset-btn" data-pitch="3">📈 Выше</button>
+                </div>
+            </div>
+            
+            <button type="submit" id="processBtn">
+                <span class="spinner"></span>
+                <span class="btn-text">🚀 Обработать</span>
+            </button>
+        </form>
+        
+        <div id="status" class="status"></div>
+        
+        <div id="result" class="result">
+            <h3 style="margin-bottom: 12px;">✅ Готово!</h3>
+            <audio id="audioPlayer" controls></audio>
+            <a id="downloadLink" class="download-btn" download>
+                ⬇️ Скачать MP3
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 🔧 Настройка: укажи правильный URL бэкенда
+        // Если фронтенд и бэкенд на одном домене — можно оставить относительный путь
+        const API_BASE = "http://127.0.0.1:8080/api/audio";
+
+        // DOM элементы
+        const form = document.getElementById('processForm');
+        const fileInput = document.getElementById('audioFile');
+        const tempoSlider = document.getElementById('tempo');
+        const pitchSlider = document.getElementById('pitch');
+        const tempoValue = document.getElementById('tempoValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const processBtn = document.getElementById('processBtn');
+        const statusEl = document.getElementById('status');
+        const resultEl = document.getElementById('result');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const downloadLink = document.getElementById('downloadLink');
+
+        // Обновление значений слайдеров
+        function updateSliderDisplays() {
+            // Tempo: 100 = 1.0x, 85 = 0.85x
+            const tempoNum = parseInt(tempoSlider.value) / 100;
+            tempoValue.textContent = tempoNum.toFixed(2) + 'x';
+            
+            // Pitch: просто число + "st"
+            pitchValue.textContent = pitchSlider.value + ' st';
+        }
+
+        tempoSlider.addEventListener('input', updateSliderDisplays);
+        pitchSlider.addEventListener('input', updateSliderDisplays);
+        updateSliderDisplays();
+
+        // Пресеты для кнопок
+        document.querySelectorAll('.preset-btn[data-tempo]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                tempoSlider.value = btn.dataset.tempo;
+                // Обновляем активный класс
+                document.querySelectorAll('.preset-btn[data-tempo]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateSliderDisplays();
+            });
+        });
+
+        document.querySelectorAll('.preset-btn[data-pitch]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                pitchSlider.value = btn.dataset.pitch;
+                document.querySelectorAll('.preset-btn[data-pitch]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateSliderDisplays();
+            });
+        });
+
+        // Обработка отправки формы
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const file = fileInput.files[0];
+            if (!file) {
+                showStatus('❌ Выберите файл', 'error');
+                return;
+            }
+
+            // Валидация размера (опционально, дублирует бэкенд)
+            const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
+            if (file.size > MAX_SIZE) {
+                showStatus(`❌ Файл слишком большой (макс. 100 МБ)`, 'error');
+                return;
+            }
+
+            setLoading(true);
+            hideStatus();
+            resultEl.classList.remove('show');
+
+            try {
+                // 🔹 Подготовка FormData
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('tempo', tempoSlider.value);  // строкой, бэкенд сам распарсит в Double
+                formData.append('pitch', pitchSlider.value);
+
+                // 🔹 Отправка запроса
+                const response = await fetch(`${API_BASE}/process`, {
+                    method: 'POST',
+                    body: formData
+                    // ⚠️ Не указывай Content-Type! Браузер сам добавит multipart/form-data с boundary
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Ошибка ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                // 🔹 Отображение результата
+                showStatus('✅ Обработка завершена!', 'success');
+                
+                // Путь возвращается в ProcessingResponse.path — адаптируй под свой DTO
+                const filePath = result.path || result.outputPath || result.filePath || result.downloadUrl;
+                if (!filePath) {
+                    throw new Error('Бэкенд не вернул путь к файлу');
+                }
+
+                // Кодируем путь для URL (на случай пробелов и спецсимволов)
+                const encodedPath = encodeURIComponent(filePath);
+                const downloadUrl = `${API_BASE}/download/${encodedPath}`;
+                
+                // Настраиваем плеер и ссылку
+                audioPlayer.src = downloadUrl;
+                downloadLink.href = downloadUrl;
+                downloadLink.textContent = `⬇️ Скачать ${file.name.replace(/\.[^.]+$/, '')}_processed.mp3`;
+                
+                resultEl.classList.add('show');
+                
+                // Автовоспроизведение (может блокироваться браузером без взаимодействия)
+                audioPlayer.play().catch(() => {
+                    // Игнорируем, если браузер заблокировал автоплей
+                });
+
+            } catch (error) {
+                console.error('Processing error:', error);
+                showStatus(`❌ ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Утилиты для UI
+        function setLoading(loading) {
+            processBtn.disabled = loading;
+            processBtn.classList.toggle('loading', loading);
+            fileInput.disabled = loading;
+            tempoSlider.disabled = loading;
+            pitchSlider.disabled = loading;
+        }
+
+        function showStatus(message, type) {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function hideStatus() {
+            statusEl.className = 'status';
+            statusEl.textContent = '';
+        }
+
+        // 🔧 Для отладки: проверка доступности бэкенда
+        async function checkBackend() {
+            try {
+                await fetch(`${API_BASE}/../actuator/health`, { method: 'HEAD' });
+                console.log('✅ Backend is reachable');
+            } catch {
+                console.warn('⚠️ Backend may not be reachable at', API_BASE);
+                // Можно показать предупреждение пользователю
+            }
+        }
+        checkBackend();
+    </script>
+</body>
+</html>
