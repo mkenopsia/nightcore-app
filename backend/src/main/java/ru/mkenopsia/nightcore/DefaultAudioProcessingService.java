@@ -29,13 +29,13 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
 
             Path outputMp3 = convertToMp3(tempWav);
 
-            log.info("Processing completed: {} → {}", inputPath.getFileName(), outputMp3.getFileName());
+            log.info("Обработка завершена: {} -> {}", inputPath.getFileName(), outputMp3.getFileName());
             return new ProcessingResponse("OK", outputMp3.getFileName().toString());
         } catch (ProcessExecutionException e) {
-            log.error("Process failed for {}: {}", inputPath.getFileName(), e.getMessage());
-            throw new AudioProcessingException("Failed to process audio: " + e.getMessage(), e);
+            log.error("Обработка закончилась ошибкой {}: {}", inputPath.getFileName(), e.getMessage());
+            throw new AudioProcessingException("Не удалось обработать аудио: " + e.getMessage(), e);
         } catch (IOException e) {
-            log.error("IO error for {}: {}", inputPath.getFileName(), e.getMessage());
+            log.error("IO ошибка {}: {}", inputPath.getFileName(), e.getMessage());
             throw new AudioProcessingException("File system error: " + e.getMessage(), e);
         } finally {
             cleanupTempFiles(inputPath, tempWav);
@@ -66,7 +66,7 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
                 "-pitch=" + preset.pitch()
         );
 
-        log.debug("Applying soundstretch: tempo={}%, pitch={}",
+        log.debug("Обработка soundstretch: tempo={}%, pitch={}",
                 preset.tempo(), preset.pitch());
         processExecutor.execute(command);
     }
@@ -82,7 +82,7 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
                 output.toString()
         );
 
-        log.debug("Encoding to MP3: {} → {}@{}kbps",
+        log.debug("Кодирование в MP3: {} -> {}@{}kbps",
                 inputWav.getFileName(), output.getFileName(), props.getMp3Bitrate());
         processExecutor.execute(command);
         return output;
@@ -102,9 +102,9 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
             if (path != null && !path.equals(props.getTempDir())) {
                 try {
                     Files.deleteIfExists(path);
-                    log.trace("Cleaned up temp file: {}", path.getFileName());
+                    log.trace("Удалён файл: {}", path.getFileName());
                 } catch (IOException e) {
-                    log.warn("Failed to delete temp file {}: {}", path.getFileName(), e.getMessage());
+                    log.warn("Не удалось удалить файл {}: {}", path.getFileName(), e.getMessage());
                 }
             }
         }
