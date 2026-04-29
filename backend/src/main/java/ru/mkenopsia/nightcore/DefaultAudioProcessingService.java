@@ -24,7 +24,7 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
         try {
             Path wavSource = isWav(inputPath) ? inputPath : convertToWav(inputPath);
 
-            tempWav = createTempPath("processed", ".wav");
+            tempWav = PathUtils.createTempFile(props.getTempDir(), "processed", ".wav");
             executeSoundStretch(wavSource, tempWav, preset);
 
             Path outputMp3 = convertToMp3(tempWav);
@@ -43,7 +43,11 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
     }
 
     private Path convertToWav(Path input) throws ProcessExecutionException, IOException {
-        Path output = createTempPath(PathUtils.getFilenameWithoutExtension(input), ".wav");
+        Path output = PathUtils.createTempFile(
+                props.getTempDir(),
+                PathUtils.getFilenameWithoutExtension(input),
+                ".wav"
+        );
 
         var command = List.of(
                 "ffmpeg", "-i", input.toString(),
@@ -72,7 +76,11 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
     }
 
     private Path convertToMp3(Path inputWav) throws ProcessExecutionException, IOException {
-        Path output = createTempPath(PathUtils.getFilenameWithoutExtension(inputWav), ".mp3");
+        Path output = PathUtils.createTempFile(
+                props.getTempDir(),
+                PathUtils.getFilenameWithoutExtension(inputWav),
+                ".mp3"
+        );
 
         var command = List.of(
                 "lame",
@@ -91,10 +99,6 @@ public class DefaultAudioProcessingService implements AudioProcessingService {
     private boolean isWav(Path path) {
         String ext = StringUtils.getFilenameExtension(path.toString());
         return "wav".equalsIgnoreCase(ext);
-    }
-
-    private Path createTempPath(String prefix, String extension) throws IOException {
-        return Files.createTempFile(props.getTempDir(), prefix + "_", extension);
     }
 
     private void cleanupTempFiles(Path... paths) {

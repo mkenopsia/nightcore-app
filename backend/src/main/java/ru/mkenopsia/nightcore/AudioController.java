@@ -8,7 +8,6 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -82,7 +81,7 @@ public class AudioController {
             headers.setContentLength(Files.size(filePath));
         } catch (IOException e) {
         }
-        headers.setCacheControl("no-cache, no-store, must-revalidate"); // временный файл
+        headers.setCacheControl("no-cache, no-store, must-revalidate");
 
         return ResponseEntity.ok()
                 .headers(headers)
