@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "serve": "^14.2.6"
+  },
+  "scripts": {
+    "serve": "serve . --listen 3123 --single --no-clipboard"
+  }
+}
