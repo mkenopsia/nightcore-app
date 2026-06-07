@@ -7,11 +7,11 @@ on:
     branches: [master]
 
 env:
-  NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+  NDV_API_KEY: ${{ secrets.NDV_API_KEY }}
 
 jobs:
   build:
-    name: Build & Test
+    name: Build + Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: 'amazoncorretto'
           cache: maven
 
       - name: Build backend
@@ -120,18 +120,35 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: 'amazoncorretto'
           cache: maven
+
+      - name: Cache OWASP DC database
+        id: cache-dc
+        uses: actions/cache@v4
+        with:
+          path: ~/.dependency-check
+          key: dc-${{ runner.os }}-${{ hashFiles('backend/pom.xml') }}
+          restore-keys: |
+            dc-${{ runner.os }}-
 
       - name: OWASP Dependency Check
         run: |
-          ./mvnw org.owasp:dependency-check-maven:check \
-            -DskipTests \
-            -DfailBuildOnCVSS=7 \
-            -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+          if [ -n "$NDV_API_KEY" ]; then
+            ./mvnw org.owasp:dependency-check-maven:check \
+              -DskipTests \
+              -DfailBuildOnCVSS=7 \
+              -DnvdApiKey="$NDV_API_KEY"
+          else
+            echo "NDV_API_KEY not set — running with built-in rate limiting"
+            ./mvnw org.owasp:dependency-check-maven:check \
+              -DskipTests \
+              -DfailBuildOnCVSS=7 \
+              -DnvdApiDelay=4000
+          fi
         working-directory: backend
         env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          NDV_API_KEY: ${{ secrets.NDV_API_KEY }}
 
       - name: Upload dependency report
         if: always()
