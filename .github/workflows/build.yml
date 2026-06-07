@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build & Test
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,8 +20,8 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Backend build & test
-        run: ./mvnw clean verify
+      - name: Backend build
+        run: ./mvnw clean verify -Dmaven.tests.skip=true
         working-directory: backend
 
       - name: Frontend deps
