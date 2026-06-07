@@ -2,6 +2,7 @@ package ru.mkenopsia.nightcore;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,25 +10,40 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 @Slf4j
 @Service
 public class LocalAudioFileStorage {
 
-    public static Path TEMP_DIR = Paths.get("tmp");
+    private final Path tempDir;
 
-    public LocalAudioFileStorage() {
-        TEMP_DIR = Paths.get(System.getProperty("java.io.tmpdir"), "audio-uploads");
+    public LocalAudioFileStorage(@Value("${audio.processing.temp-dir:#{null}}") Path tempDir,
+                                  AudioProcessingProperties props) {
+        this.tempDir = tempDir != null ? tempDir : props.getTempDir();
+    }
+
+    // test-only constructor
+    LocalAudioFileStorage(Path tempDir) {
+        this.tempDir = tempDir;
     }
 
     @PostConstruct
     public void init() throws IOException {
-        Files.createDirectories(TEMP_DIR);
-        log.info("Temp directory initialized: {}", TEMP_DIR.toAbsolutePath());
+        Files.createDirectories(tempDir);
+        log.info("Temp directory initialized: {}", tempDir.toAbsolutePath());
+    }
+
+    public Path getTempDir() {
+        return tempDir;
     }
 
     public Path saveFileLocally(MultipartFile file) throws IOException {
-        Path dest = TEMP_DIR.resolve(file.getOriginalFilename());
+        String name = file.getOriginalFilename();
+        if (name != null) {
+            name = Paths.get(name).getFileName().toString();
+        }
+        Path dest = tempDir.resolve(name != null ? name : "upload.bin");
         file.transferTo(dest);
         return dest;
     }

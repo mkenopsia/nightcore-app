@@ -48,7 +48,7 @@ jobs:
           path: frontend/
 
   static-analysis:
-    name: SAST — Checkstyle / PMD / SpotBugs
+    name: "SAST: PMD / SpotBugs"
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -92,7 +92,8 @@ jobs:
       - name: OWASP Dependency Check
         run: |
           ./mvnw org.owasp:dependency-check-maven:check \
-            -DfailBuildOnCVSS=7
+            -DfailBuildOnCVSS=7 \
+            -DnvdApiKey=${{ secrets.NVD_API_KEY }}
         working-directory: backend
         continue-on-error: true
 
