@@ -18,6 +18,21 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "mkenopsia"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "git@github.com:mkenopsia/nightcore-app.git",
+    "accountId": "61fdbd29-3ac5-4e38-8f1a-aa383baf80f3"
+  }
+}]]></component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -25,9 +40,12 @@
       </MavenGeneralSettings>
     </option>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5
-}]]></component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="2" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
   <component name="ProjectId" id="3CnawLolhHb9bcWP4QdCHyUe5Xr" />
   <component name="ProjectViewState">
     <option name="showLibraryContents" value="true" />
@@ -40,7 +58,10 @@
     "RequestMappingsPanelWidth0": "75",
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "Spring Boot.NightcoreApplication.executor": "Run",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/home/kaio/study/nightcore/backend",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -79,6 +100,7 @@
       <option name="presentableId" value="Default" />
       <updated>1777024025971</updated>
       <workItem from="1777024026756" duration="9278000" />
+      <workItem from="1780834829234" duration="18000" />
     </task>
     <servers />
   </component>

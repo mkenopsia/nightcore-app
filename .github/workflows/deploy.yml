@@ -1,0 +1,168 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build backend
+        run: ./mvnw clean package
+        working-directory: backend
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/nightcore.jar
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        run: npm ci
+        working-directory: frontend
+
+      - name: Upload frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-static
+          path: frontend/
+
+  static-analysis:
+    name: SAST — Checkstyle / PMD / SpotBugs
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run static analysis
+        run: ./mvnw clean verify -DskipTests
+        working-directory: backend
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-analysis-reports
+          path: |
+            backend/target/checkstyle*
+            backend/target/pmd*
+            backend/target/spotbugs*
+            backend/target/site/
+
+  dependency-check:
+    name: Dependency Check
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: OWASP Dependency Check
+        run: |
+          ./mvnw org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7
+        working-directory: backend
+        continue-on-error: true
+
+  dast:
+    name: DAST — OWASP ZAP
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Install system deps for app
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg soundstretch lame
+
+      - name: Start backend
+        run: |
+          java -jar nightcore.jar \
+            --server.port=8123 &
+          sleep 5
+          for i in $(seq 1 15); do
+            curl -s http://localhost:8123/api/audio/download/test > /dev/null 2>&1 && break
+            sleep 2
+          done
+
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: 'http://localhost:8123'
+          cmd_options: '-a'
+          issue_title: 'ZAP DAST Report'
+          allow_issue_writing: false
+          fail_action: false
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-zap-report
+          path: /home/runner/work/zap-report/
+
+      - name: Stop backend
+        if: always()
+        run: |
+          curl -X POST http://localhost:8123/actuator/shutdown 2>/dev/null || true
+          pkill -f "nightcore.jar" || true
+
+  deploy:
+    name: Deploy
+    needs: [build, static-analysis, dependency-check, dast]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-static
+          path: frontend
+
+      - name: Deploy placeholder
+        run: echo "заглушенька))"
