@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'amazoncorretto'
+          distribution: 'temurin'
           cache: maven
 
       - name: Build backend
@@ -120,7 +120,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'amazoncorretto'
+          distribution: 'temurin'
           cache: maven
 
       - name: Cache OWASP DC database
