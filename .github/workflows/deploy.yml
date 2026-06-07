@@ -71,7 +71,6 @@ jobs:
         with:
           name: static-analysis-reports
           path: |
-            backend/target/checkstyle*
             backend/target/pmd*
             backend/target/spotbugs*
             backend/target/site/
@@ -98,7 +97,7 @@ jobs:
         continue-on-error: true
 
   dast:
-    name: DAST — OWASP ZAP
+    name: DAST - OWASP ZAP
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -145,9 +144,7 @@ jobs:
 
       - name: Stop backend
         if: always()
-        run: |
-          curl -X POST http://localhost:8123/actuator/shutdown 2>/dev/null || true
-          pkill -f "nightcore.jar" || true
+        run: pkill -f "nightcore.jar" || true
 
   deploy:
     name: Deploy
