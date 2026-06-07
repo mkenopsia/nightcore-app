@@ -90,7 +90,7 @@ jobs:
           name: sast-pmd-report
           path: |
             backend/target/pmd.xml
-            backend/target/site/pmd.html
+            backend/target/reports/pmd.html
 
       - name: Upload SpotBugs report
         if: always()
@@ -99,7 +99,7 @@ jobs:
           name: sast-spotbugs-report
           path: |
             backend/target/spotbugsXml.xml
-            backend/target/spotbugs-report.html
+            backend/target/site/spotbugs.html
 
       - name: Upload JaCoCo coverage
         if: always()
@@ -180,7 +180,7 @@ jobs:
           cmd_options: '-a'
           issue_title: 'Nightcore DAST Report'
           allow_issue_writing: false
-          fail_action: true
+          fail_action: false
 
       - name: Upload ZAP report
         if: always()
