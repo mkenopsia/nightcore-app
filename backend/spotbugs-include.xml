@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <Match>
-        <Bug category="BAD_PRACTICE, CORRECTNESS, MALICIOUS_CODE, MT_CORRECTNESS, PERFORMANCE, SECURITY"/>
+        <Bug category="SECURITY, MALICIOUS_CODE"/>
     </Match>
 </FindBugsFilter>

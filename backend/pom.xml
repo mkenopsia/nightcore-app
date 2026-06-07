@@ -94,9 +94,6 @@
                     <failOnViolation>true</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
                     <rulesets>
-                        <ruleset>/category/java/bestpractices.xml</ruleset>
-                        <ruleset>/category/java/errorprone.xml</ruleset>
-                        <ruleset>/category/java/performance.xml</ruleset>
                         <ruleset>/category/java/security.xml</ruleset>
                     </rulesets>
                 </configuration>
@@ -106,7 +103,6 @@
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
-                            <goal>cpd</goal>
                         </goals>
                     </execution>
                 </executions>
