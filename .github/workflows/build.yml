@@ -21,7 +21,7 @@ jobs:
           cache: maven
 
       - name: Backend build
-        run: ./mvnw clean verify -Dmaven.tests.skip=true
+        run: ./mvnw clean verify -Dmaven.test.skip=true
         working-directory: backend
 
       - name: Frontend deps
