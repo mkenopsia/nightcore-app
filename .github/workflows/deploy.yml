@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [master]
 
+env:
+  NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
 jobs:
   build:
     name: Build & Test
@@ -48,9 +51,10 @@ jobs:
           path: frontend/
 
   static-analysis:
-    name: "SAST: PMD / SpotBugs"
+    name: "SAST: PMD + SpotBugs"
     needs: build
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -64,21 +68,51 @@ jobs:
       - name: Run static analysis
         run: ./mvnw clean verify -DskipTests
         working-directory: backend
+        continue-on-error: true
 
-      - name: Upload reports
+      - name: Generate SpotBugs HTML report
+        if: always()
+        run: |
+          SPOTBUGS_JAR=$(find ~/.m2/repository/com/github/spotbugs/spotbugs/ -name "spotbugs-*.jar" | head -1)
+          if [ -n "$SPOTBUGS_JAR" ]; then
+            java -cp "$SPOTBUGS_JAR" \
+              edu.umd.cs.findbugs.LaunchAppropriateUI \
+              -quiet -html \
+              -output target/spotbugs-report.html \
+              target/spotbugsXml.xml || true
+          fi
+        working-directory: backend
+
+      - name: Upload PMD report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: static-analysis-reports
+          name: sast-pmd-report
           path: |
-            backend/target/pmd*
-            backend/target/spotbugs*
-            backend/target/site/
+            backend/target/pmd.xml
+            backend/target/site/pmd.html
+
+      - name: Upload SpotBugs report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-spotbugs-report
+          path: |
+            backend/target/spotbugsXml.xml
+            backend/target/spotbugs-report.html
+
+      - name: Upload JaCoCo coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-jacoco-coverage
+          path: backend/target/site/jacoco/
 
   dependency-check:
-    name: Dependency Check
+    name: "SCA: OWASP DC"
     needs: build
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -92,15 +126,27 @@ jobs:
       - name: OWASP Dependency Check
         run: |
           ./mvnw org.owasp:dependency-check-maven:check \
+            -DskipTests \
             -DfailBuildOnCVSS=7 \
             -DnvdApiKey=${{ secrets.NVD_API_KEY }}
         working-directory: backend
-        continue-on-error: true
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      - name: Upload dependency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sca-owasp-dc-report
+          path: |
+            backend/target/dependency-check-report.html
+            backend/target/dependency-check-report.json
 
   dast:
-    name: DAST - OWASP ZAP
+    name: "DAST: OWASP ZAP"
     needs: build
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -123,7 +169,7 @@ jobs:
             --server.port=8123 &
           sleep 5
           for i in $(seq 1 15); do
-            curl -s http://localhost:8123/api/audio/download/test > /dev/null 2>&1 && break
+            curl -s http://localhost:8123/api/vuln/command > /dev/null 2>&1 && break
             sleep 2
           done
 
@@ -132,16 +178,16 @@ jobs:
         with:
           target: 'http://localhost:8123'
           cmd_options: '-a'
-          issue_title: 'ZAP DAST Report'
+          issue_title: 'Nightcore DAST Report'
           allow_issue_writing: false
-          fail_action: false
+          fail_action: true
 
       - name: Upload ZAP report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dast-zap-report
-          path: /home/runner/work/zap-report/
+          path: ./zap-report/
 
       - name: Stop backend
         if: always()

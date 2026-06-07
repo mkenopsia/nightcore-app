@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -23,19 +22,10 @@ public class LocalAudioFileStorage {
         this.tempDir = tempDir != null ? tempDir : props.getTempDir();
     }
 
-    // test-only constructor
-    LocalAudioFileStorage(Path tempDir) {
-        this.tempDir = tempDir;
-    }
-
     @PostConstruct
     public void init() throws IOException {
         Files.createDirectories(tempDir);
         log.info("Temp directory initialized: {}", tempDir.toAbsolutePath());
-    }
-
-    public Path getTempDir() {
-        return tempDir;
     }
 
     public Path saveFileLocally(MultipartFile file) throws IOException {

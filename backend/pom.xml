@@ -53,11 +53,17 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- INTENTIONAL VULNERABILITY for OWASP DC demo -->
+        <!-- INTENTIONAL VULNERABILITY for OWASP DC demo (Log4Shell CVE-2021-44228) -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.14.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -121,10 +127,33 @@
                 <configuration>
                     <failOnError>true</failOnError>
                     <includeFilterFile>spotbugs-include.xml</includeFilterFile>
+                    <xmlOutput>true</xmlOutput>
                 </configuration>
                 <executions>
                     <execution>
                         <id>spotbugs</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.2.2</version>
+                <configuration>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>dependency-check</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>

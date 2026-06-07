@@ -1,34 +1,24 @@
 package ru.mkenopsia.nightcore;
 
 import jakarta.annotation.PostConstruct;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 
+@Configuration
 @ConfigurationProperties(prefix = "audio.processing")
+@Data
 public class AudioProcessingProperties {
 
-    private final Duration timeout;
-    private final int mp3Bitrate;
-    private final Path tempDir;
-
-    public AudioProcessingProperties(
-            @DefaultValue("60s") Duration timeout,
-            @DefaultValue("192") int mp3Bitrate,
-            @DefaultValue("${java.io.tmpdir}/audio-uploads") Path tempDir
-    ) {
-        this.timeout = timeout;
-        this.mp3Bitrate = mp3Bitrate;
-        this.tempDir = tempDir;
-    }
-
-    public Duration getTimeout() { return timeout; }
-    public int getMp3Bitrate() { return mp3Bitrate; }
-    public Path getTempDir() { return tempDir; }
+    private Duration timeout = Duration.ofSeconds(60);
+    private int mp3Bitrate = 192;
+    private Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "audio-uploads");
 
     @PostConstruct
     public void init() throws IOException {
