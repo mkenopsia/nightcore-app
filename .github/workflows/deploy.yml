@@ -140,12 +140,8 @@ jobs:
               -DfailBuildOnCVSS=7 \
               -DnvdApiKey="$NDV_API_KEY"
           else
-            echo "NDV_API_KEY not set — running with built-in rate limiting"
-            ./mvnw org.owasp:dependency-check-maven:check \
-              -DskipTests \
-              -DfailBuildOnCVSS=7 \
-              -DnvdApiDelay=4000
-          fi
+            echo "NDV_API_KEY not set"
+            exit 1
         working-directory: backend
         env:
           NDV_API_KEY: ${{ secrets.NDV_API_KEY }}
@@ -182,13 +178,7 @@ jobs:
 
       - name: Start backend
         run: |
-          java -jar nightcore.jar \
-            --server.port=8123 &
-          sleep 5
-          for i in $(seq 1 15); do
-            curl -s http://localhost:8123/api/vuln/command > /dev/null 2>&1 && break
-            sleep 2
-          done
+          sleep 10
 
       - name: OWASP ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.12.0
