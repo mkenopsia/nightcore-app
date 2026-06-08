@@ -178,7 +178,13 @@ jobs:
 
       - name: Start backend
         run: |
-          sleep 10
+          java -jar nightcore.jar \
+            --server.port=8123 &
+          sleep 5
+          for i in $(seq 1 15); do
+            curl -s http://localhost:8123 > /dev/null 2>&1 && break
+            sleep 2
+          done
 
       - name: OWASP ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.12.0
