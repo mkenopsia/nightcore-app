@@ -142,6 +142,7 @@ jobs:
           else
             echo "NDV_API_KEY not set"
             exit 1
+          fi
         working-directory: backend
         env:
           NDV_API_KEY: ${{ secrets.NDV_API_KEY }}
